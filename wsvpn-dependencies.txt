@@ -1,0 +1,29 @@
+Queue		built-in (queue in python3)
+
+External packages and their dependencies:
+OpenSSL		pyOpenSSL 18.0.0
+psutil		psutil 5.4.8
+tornado		tornado 5.1.1
+
+- pyOpenSSL 18.0.0
+  - cryptography
+    - asn1crypto
+    - cffi
+      - pycparser
+    - enum34
+    - idna
+    - ipaddress
+    - six
+  - six
+
+- psutil 5.4.8
+
+- tornado 5.1.1
+  - backports-abc
+  - futures
+  - singledispatch
+    - six
+    
+
+# Installation:
+sudo apt install python3-psutil python3-openssl python3-tornado
