@@ -251,3 +251,25 @@ Activate the changes to NetworkManager Dispatcher:
 sudo systemctl daemon-reload
 sudo systemctl restart NetworkManager-dispatcher.service
 ```
+
+## Visibility between two OpenVPN networks
+
+If we want that clients on **ordinary OpenVPN** (`10.10.8.0/24`) and **websocket OpenVPN** (`10.10.7.0/24`) network see each other, we must take care of routing between those two networks.
+
+To **OpenVPN WS server configuration** (`sudo nano /etc/openvpn/Telefoncek_WS.conf`) we need to add command to push clients route to ordinary OpenVPN network:
+
+```
+# Add route to "ordinary" OpenVPN network
+push "route 10.10.8.0 255.255.255.0"
+```
+
+And to **ordinary OpenVPN server configuration** (`sudo nano /etc/openvpn/Telefoncek_TCP.conf`) we need to add command to push clients route to OpenVPN WS network:
+
+```
+# Add route to OpenVPN WS network
+push "route 10.10.7.0 255.255.255.0"
+```
+
+Please note that in both server configurations we also need `client-to-client` directive!
+
+If configuration of some "ordinary" OpenVPN clients is not accepting route pulling (with `route-nopull` directive in configuration), we need to add `route 10.10.7.0 255.255.255.0` to this client configuration!
