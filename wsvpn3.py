@@ -1,7 +1,7 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-prog_ver = 'WSVPN VPN Websocket Proxy v1.10'
-prog_cpy = 'Copyright (c) 2017-2022 Matej Kovacic, Gasper Zejn, Matjaz Rihtar'
+prog_ver = 'WSVPN VPN Websocket Proxy v1.11'
+prog_cpy = 'Copyright (c) 2017-2023 Matej Kovacic, Gasper Zejn, Matjaz Rihtar'
 import sys, os, re
 import ntpath, argparse
 import traceback
@@ -202,14 +202,14 @@ def run_cmd(args, timeout=0):
 
     # start and wait
     #p = psutil.Popen(cmd, shell=True)
-    p = psutil.Popen(args, stdout=PIPE, stderr=STDOUT, bufsize=1)
+    p = psutil.Popen(args, stdout=PIPE, stderr=STDOUT, text=True)
 
     q = queue.Queue()
     qt = Thread(target=enq_output, args=(p.stdout, q))
     qt.start()
 
     if timeout == 0: # wait until finished
-      timeout = sys.maxint
+      timeout = 2^31
 
     t = Timer(timeout, p.terminate)
     output = ''
@@ -845,6 +845,8 @@ def main(argv):
         if private_key is None:
           certificate = ntdirname(__file__) + 'localhost.crt'
           private_key = ntdirname(__file__) + 'localhost.key'
+          certificate = os.path.abspath(certificate)
+          private_key = os.path.abspath(private_key)
           log.info('Creating new SSL certificate')
           create_self_signed_cert(certificate, private_key)
         else:
@@ -860,6 +862,7 @@ def main(argv):
           name = name[:ix]
         name = name + '.key'
         private_key = dir + name
+        private_key = os.path.abspath(private_key)
       else:
         certificate = os.path.abspath(certificate)
         private_key = os.path.abspath(private_key)
