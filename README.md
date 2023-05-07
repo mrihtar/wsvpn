@@ -182,7 +182,7 @@ Then we go to the network settings and addd OpenVPN connection. Minimal required
 
 ![WSVPN connection in Network Manager](https://user-images.githubusercontent.com/3339198/236640308-49df7346-d89d-4c93-9b55-55608f625ed7.png)
 
-Now you can connect to WSVPN through GUI, **but**, you need to run WSVPN script first). 
+Now you can connect to WSVPN through GUI (**but** you need to run WSVPN script first). 
 
 ### Autostart WSVPN on a client
 
@@ -244,6 +244,8 @@ Activate the changes to NetworkManager Dispatcher:
 sudo systemctl daemon-reload
 sudo systemctl restart NetworkManager-dispatcher.service
 ```
+
+Now your client will have WSVPN automatically enabled, yun can just activate OpenVPN client to connect to VPN manually.
 
 ## Visibility between two OpenVPN networks
 
