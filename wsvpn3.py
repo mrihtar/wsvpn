@@ -1,6 +1,6 @@
-#!/usr/bin/env python3
+#!/usr/bin/python3
 # -*- coding: utf-8 -*-
-prog_ver = 'WSVPN VPN Websocket Proxy v1.11'
+prog_ver = 'WSVPN VPN Websocket Proxy v1.12'
 prog_cpy = 'Copyright (c) 2017-2023 Matej Kovacic, Gasper Zejn, Matjaz Rihtar'
 import sys, os, re
 import ntpath, argparse
@@ -15,10 +15,12 @@ try:
 except ImportError:
   import Queue as queue
 from threading import Thread, Timer
+import asyncio, contextlib
 
 from OpenSSL import crypto, SSL
 from binascii import hexlify
 from tornado import gen, web, ioloop, iostream, websocket
+from tornado.platform.asyncio import AsyncIOMainLoop
 from tornado.concurrent import Future
 from tornado.httpserver import HTTPServer
 from tornado.tcpserver import TCPServer
@@ -141,14 +143,15 @@ def signal_handler(signum, frame):
   closing = True
 # signal_handler
 
+@gen.coroutine
 def try_exit():
   if closing:
-    ioloop.IOLoop.current().stop()
-    if route_ip is not None:
-      rc, out = delete_route(route_ip)
-      if rc != 0:
-        log.error(out.strip())
-    log.info('Exit success')
+    if close_callback is not None:
+      server.stop()
+      close_callback.stop()
+    loop = ioloop.IOLoop.current()
+    #loop.stop()
+    loop.add_callback(loop.stop)
 # try_exit
 
 # =============================================================================
@@ -221,7 +224,7 @@ def run_cmd(args, timeout=0):
           if line is None:
             break
           if debug:
-            dtext = obj2asc(line)
+            dtext = obj2asc(line).decode('utf-8')
             dtext = dtext[:dtext_len] + (dtext[dtext_len:] and '...')
             log.debug('Cmd >> {!r}'.format(dtext))
           output += line
@@ -473,7 +476,7 @@ class VPNProxySocket(websocket.WebSocketHandler):
         self.cleanup()
         break
       if debug:
-        dtext = obj2asc(message)
+        dtext = obj2asc(message).decode('utf-8')
         dtext = dtext[:dtext_len] + (dtext[dtext_len:] and '...')
         log.debug('Upstream >> {!r}'.format(dtext))
       try:
@@ -490,12 +493,12 @@ class VPNProxySocket(websocket.WebSocketHandler):
   def on_message(self, message):
     try:
       if debug:
-        dtext = obj2asc(message)
+        dtext = obj2asc(message).decode('utf-8')
         dtext = dtext[:dtext_len] + (dtext[dtext_len:] and '...')
         log.debug('WS client >> {!r}'.format(dtext))
       if not self.upstream_connect.done():
         yield self.upstream_connect # wait for connect
-      if isinstance(message, unicode):
+      if isinstance(message, str):
         message = message.encode('Latin-1') # universal encode
       yield self.upstream.write(message)
     except Exception as e:
@@ -568,11 +571,11 @@ class VPNWSClient(object):
         log.warning('Upstream disconnected')
         break
       if debug:
-        dtext = obj2asc(message)
+        dtext = obj2asc(message).decode('utf-8')
         dtext = dtext[:dtext_len] + (dtext[dtext_len:] and '...')
         log.debug('Upstream >> {!r}'.format(dtext))
       try:
-        if isinstance(message, unicode):
+        if isinstance(message, str):
           message = message.encode('Latin-1') # universal encode
         self.downstream.write(message)
       except Exception as e:
@@ -589,7 +592,7 @@ class VPNWSClient(object):
     log.info('Reading from client in a loop')
     while True:
       try:
-        message = yield self.downstream.read_bytes(65536, partial=True)
+        message = yield self.downstream.read_bytes(msgbuf_len, partial=True)
       except Exception as e:
         if not isinstance(e, iostream.StreamClosedError):
           errmsg = sub_error(sys._getframe().f_code.co_name)
@@ -597,7 +600,7 @@ class VPNWSClient(object):
         log.warning('Client disconnected')
         break
       if debug:
-        dtext = obj2asc(message)
+        dtext = obj2asc(message).decode('utf-8')
         dtext = dtext[:dtext_len] + (dtext[dtext_len:] and '...')
         log.debug('Client >> {!r}'.format(dtext))
       try:
@@ -631,8 +634,11 @@ class ClientSideTCPSocket(TCPServer):
 
   @gen.coroutine
   def handle_stream(self, stream, address):
-    handler = self.upstream_handler(stream)
-    self.loop.spawn_callback(handler.connect)
+    self.handler = self.upstream_handler(stream)
+    self.loop.spawn_callback(self.handler.connect)
+
+  def stop(self):
+    super(ClientSideTCPSocket, self).stop()
 # ClientSideTCPSocket
 
 # =============================================================================
@@ -667,7 +673,7 @@ def usage(prog, short=False):
 
 # =============================================================================
 def main(argv):
-  global debug, log
+  global debug, log, close_callback, server
   global upstream_proto, upstream_host, upstream_port, upstream_path, upstream_url
   global local_secure, upstream_secure, certificate, private_key, route_ip
 
@@ -876,11 +882,14 @@ def main(argv):
         return 1
 
     # periodically check for signals and in case of signal try to terminate main loop
-    signal.signal(signal.SIGINT, signal_handler)
-    signal.signal(signal.SIGTERM, signal_handler)
-    ioloop.PeriodicCallback(try_exit, 250).start()
+    #signal.signal(signal.SIGINT, signal_handler)
+    #signal.signal(signal.SIGTERM, signal_handler)
+    #log.debug('Using proactor: IocpProactor') # on Windows
+    #close_callback = ioloop.PeriodicCallback(try_exit, 500, 0.1)
+    #close_callback.start()
 
-    loop = ioloop.IOLoop.current()
+    AsyncIOMainLoop().install()
+    loop = asyncio.get_event_loop()
 
     if mode == 'server':
       if debug:
@@ -920,8 +929,23 @@ def main(argv):
       log.info('Will proxy requests to {}'.format(upstream_url))
       server.listen(local_port, address=local_host)
 
-    loop.start()
-    # never returns except when signal is received
+    try:
+      # never returns except when signal is received
+      loop.run_forever()
+    #except KeyboardInterrupt:
+    except:
+      all_tasks = asyncio.gather(*asyncio.all_tasks(loop), return_exceptions=True)
+      all_tasks.cancel()
+      with contextlib.suppress(asyncio.CancelledError):
+        loop.run_until_complete(all_tasks)
+      loop.run_until_complete(loop.shutdown_asyncgens())
+    finally:
+      loop.close()
+
+    if route_ip is not None:
+      rc, out = delete_route(route_ip)
+      if rc != 0:
+        log.error(out.strip())
   except:
     errmsg = sub_error(sys._getframe().f_code.co_name)
     log.critical(errmsg)
@@ -931,5 +955,8 @@ def main(argv):
 
 # -----------------------------------------------------------------------------
 if __name__ == '__main__':
-  rc = main(sys.argv)
-  sys.exit(rc)
+  try:
+    rc = main(sys.argv)
+    sys.exit(rc)
+  except SystemExit as e:
+    os._exit(10)

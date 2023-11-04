@@ -33,7 +33,7 @@ In this example Nginx will be accepting websocket connections on location `/ws/v
 
 If you have already OpenVPN server running, you need another instance of it, with different settings.
 
-`sudo nano /etc/openvpn/Telefoncek_WS.conf`
+`sudo nano /etc/openvpn/MyVPN_WS.conf`
 
 The most important settings are:
 
@@ -91,8 +91,8 @@ You can also allow `ssh` connections to the server from the OpenVPN WS network:
 Now we start up the service and enable it on startup:
 
 ```
-sudo systemctl start openvpn@Telefoncek_WS.service
-sudo systemctl enable openvpn@Telefoncek_WS.service
+sudo systemctl start openvpn@MyVPN_WS.service
+sudo systemctl enable openvpn@MyVPN_WS.service
 ```
 
 ### Run WSVPN in server mode 
@@ -109,11 +109,15 @@ The script will be accepting websocket connections from Nginx on localhost, on T
 
 You will get the printout:
 ```
-[2023-05-06 20:04:29,105 INFO] WSVPN VPN Websocket Proxy v1.10
-[2023-05-06 20:04:29,105 INFO] Copyright (c) 2017-2022 Matej Kovacic, Gasper Zejn, Matjaz Rihtar
-[2023-05-06 20:04:29,106 DEBUG] Using selector: EpollSelector
-[2023-05-06 20:04:29,109 INFO] Server listening on ws://127.0.0.1:2000/ws/vpn/
-[2023-05-06 20:04:29,109 INFO] Will proxy requests to ws://localhost:8081/
+[2023-05-07 22:07:26,456 INFO] WSVPN VPN Websocket Proxy v1.11
+[2023-05-07 22:07:26,456 INFO] Copyright (c) 2017-2023 Matej Kovacic, Gasper Zejn, Matjaz Rihtar
+[2023-05-07 22:07:26,500 INFO] Running cmd: ip route
+[2023-05-07 22:07:26,502 INFO] Running cmd: ip route add xxx.xxx.xxx.xxx via yyy.yyy.yyy.yyy
+[2023-05-07 22:07:26,504 INFO] Creating new SSL certificate
+[2023-05-07 22:07:26,620 INFO] Using certificate: /home/matej/WSVPN/localhost.crt
+[2023-05-07 22:07:26,621 INFO] Using private key: /home/matej/WSVPN/localhost.key
+[2023-05-07 22:07:26,622 INFO] Client listening on tcp://127.0.0.1:8000
+[2023-05-07 22:07:26,622 INFO] Will proxy requests to wss://myserver.si:443/ws/vpn/
 ```
 
 ## Installation on client (Ubuntu 22.10)
@@ -127,28 +131,17 @@ First, install dependencies:
 Now we create a folder (`mkdir WSVPN`), copy WSVPN Python script to it and run it with `sudo` privileges:
 
 ```
-sudo /usr/bin/python3 /home/matej/WSVPN/wsvpn3.py -m client -l 127.0.0.1:8000 -u wss://telefoncek.si:443/ws/vpn/ -r
+sudo /usr/bin/python3 /home/matej/WSVPN/wsvpn3.py -m client -l 127.0.0.1:8000 -u wss://myserver.si:443/ws/vpn/ -r
 ```
-In this example, WSVPN script will open HTTPS encrypted (port `443`) websocket connection to telefoncek.si/ws/vpn/. To that entpoint will then be forwarded all TCP network traffic received from `localhost`, port `8000`.
+In this example, WSVPN script will open HTTPS encrypted (port `443`) websocket connection to myserver.si/ws/vpn/. To that endpoint will then be forwarded all TCP network traffic received from `localhost`, port `8000`.
 
 We get the printout:
 ```
-[2023-05-06 20:10:34,355 INFO] WSVPN VPN Websocket Proxy v1.10
-[2023-05-06 20:10:34,355 INFO] Copyright (c) 2017-2022 Matej Kovacic, Gasper Zejn, Matjaz Rihtar
-[2023-05-06 20:10:34,466 INFO] Running cmd: ip route
-[2023-05-06 20:10:34,466 ERROR] /usr/lib/python3.10/subprocess.py:959: RuntimeWarning: line buffering (buffering=1) isn't supported in binary mode, the default buffer size will be used
-[2023-05-06 20:10:34,467 ERROR]   self.stdout = io.open(c2pread, 'rb', bufsize)
-[2023-05-06 20:10:34,468 CRITICAL] run_cmd(212): AttributeError: module 'sys' has no attribute 'maxint'
-[2023-05-06 20:10:34,468 INFO] Running cmd: ip route add 91.185.207.171 via 
-[2023-05-06 20:10:34,468 ERROR] /usr/lib/python3.10/subprocess.py:959: RuntimeWarning: line buffering (buffering=1) isn't supported in binary mode, the default buffer size will be used
-[2023-05-06 20:10:34,468 ERROR]   self.stdout = io.open(c2pread, 'rb', bufsize)
-[2023-05-06 20:10:34,468 CRITICAL] run_cmd(212): AttributeError: module 'sys' has no attribute 'maxint'
-[2023-05-06 20:10:34,468 ERROR] 
-[2023-05-06 20:10:34,468 INFO] Creating new SSL certificate
-[2023-05-06 20:10:34,550 INFO] Using certificate: /home/matej/WSVPN/localhost.crt
-[2023-05-06 20:10:34,550 INFO] Using private key: /home/matej/WSVPN/localhost.key
-[2023-05-06 20:10:34,552 INFO] Client listening on tcp://127.0.0.1:8000
-[2023-05-06 20:10:34,552 INFO] Will proxy requests to wss://telefoncek.si:443/ws/vpn/
+[2023-05-07 22:05:55,052 INFO] WSVPN VPN Websocket Proxy v1.11
+[2023-05-07 22:05:55,053 INFO] Copyright (c) 2017-2023 Matej Kovacic, Gasper Zejn, Matjaz Rihtar
+[2023-05-07 22:05:55,054 DEBUG] Using selector: EpollSelector
+[2023-05-07 22:05:55,061 INFO] Server listening on ws://127.0.0.1:2000/ws/vpn/
+[2023-05-07 22:05:55,061 INFO] Will proxy requests to ws://localhost:8081/
 ```
 
 ### Set up OpenVPN client
@@ -156,7 +149,7 @@ We get the printout:
 OpenVPN WS client configuration is basically the same as normal OpenVPN configuration, except we need to define that OpenVPN will be connecting to localhost, port `8000`.
 
 Open configuration file:
-`sudo nano /etc/openvpn/Telefoncek_WS.conf`
+`sudo nano /etc/openvpn/MyVPN_WS.conf`
 
 ...and change/add this setting:
  
@@ -168,10 +161,10 @@ remote 127.0.0.1 8000
 
 OpenVPN client can now be run by:
 ```
-sudo systemctl start openvpn@Telefoncek_WS.service
+sudo systemctl start openvpn@MyVPN_WS.service
 ```
 
-In this example, **OpenVPN client** will connect to `localhost`, port `8000`, and from there connection will be forwarded through HTTPS encrypted websocket to `www.telefoncek.si/ws/vpn/` by **WSVPN script in client mode**.
+In this example, **OpenVPN client** will connect to `localhost`, port `8000`, and from there connection will be forwarded through HTTPS encrypted websocket to `www.myserver.si/ws/vpn/` by **WSVPN script in client mode**.
 
 On the server side, connection will be accepted by **Nginx** and forwarded to **WSVPN script in server mode**, listening on `localhost`, TCP port, `2000`. From there, TCP network traffic will be forwarded to **OpenVPN WS server**, listening on `localhost`, port `8001`.
 
@@ -189,7 +182,7 @@ Then we go to the network settings and addd OpenVPN connection. Minimal required
 
 ![WSVPN connection in Network Manager](https://user-images.githubusercontent.com/3339198/236640308-49df7346-d89d-4c93-9b55-55608f625ed7.png)
 
-Now you can connect to WSVPN through GUI, **but**, you need to run WSVPN script first). 
+Now you can connect to WSVPN through GUI (**but** you need to run WSVPN script first). 
 
 ### Autostart WSVPN on a client
 
@@ -201,7 +194,7 @@ Description=WSVPN
 After=network.target
 
 [Service]
-ExecStart=/usr/bin/python3 /home/matej/WSVPN/wsvpn3.py -m client -l 127.0.0.1:8000 -u wss://telefoncek.si:443/ws/vpn/ -r
+ExecStart=/usr/bin/python3 /home/matej/WSVPN/wsvpn3.py -m client -l 127.0.0.1:8000 -u wss://myserver.si:443/ws/vpn/ -r
 WorkingDirectory=/home/matej/WSVPN
 StandardOutput=inherit
 StandardError=inherit
@@ -252,18 +245,20 @@ sudo systemctl daemon-reload
 sudo systemctl restart NetworkManager-dispatcher.service
 ```
 
+Now your client will have WSVPN automatically enabled, yun can just activate OpenVPN client to connect to VPN manually.
+
 ## Visibility between two OpenVPN networks
 
 If we want that clients on **ordinary OpenVPN** (`10.10.8.0/24`) and **websocket OpenVPN** (`10.10.7.0/24`) network see each other, we must take care of routing between those two networks.
 
-To **OpenVPN WS server configuration** (`sudo nano /etc/openvpn/Telefoncek_WS.conf`) we need to add command to push clients route to ordinary OpenVPN network:
+To **OpenVPN WS server configuration** (`sudo nano /etc/openvpn/MyVPN_WS.conf`) we need to add command to push clients route to ordinary OpenVPN network:
 
 ```
 # Add route to "ordinary" OpenVPN network
 push "route 10.10.8.0 255.255.255.0"
 ```
 
-And to **ordinary OpenVPN server configuration** (`sudo nano /etc/openvpn/Telefoncek_TCP.conf`) we need to add command to push clients route to OpenVPN WS network:
+And to **ordinary OpenVPN server configuration** (`sudo nano /etc/openvpn/MyVPN_TCP.conf`) we need to add command to push clients route to OpenVPN WS network:
 
 ```
 # Add route to OpenVPN WS network
