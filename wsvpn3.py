@@ -1,6 +1,6 @@
-#!/usr/bin/env python3
+#!/usr/bin/python3
 # -*- coding: utf-8 -*-
-prog_ver = 'WSVPN VPN Websocket Proxy v1.11'
+prog_ver = 'WSVPN VPN Websocket Proxy v1.12'
 prog_cpy = 'Copyright (c) 2017-2023 Matej Kovacic, Gasper Zejn, Matjaz Rihtar'
 import sys, os, re
 import ntpath, argparse
@@ -221,7 +221,7 @@ def run_cmd(args, timeout=0):
           if line is None:
             break
           if debug:
-            dtext = obj2asc(line)
+            dtext = obj2asc(line).decode('utf-8')
             dtext = dtext[:dtext_len] + (dtext[dtext_len:] and '...')
             log.debug('Cmd >> {!r}'.format(dtext))
           output += line
@@ -473,7 +473,7 @@ class VPNProxySocket(websocket.WebSocketHandler):
         self.cleanup()
         break
       if debug:
-        dtext = obj2asc(message)
+        dtext = obj2asc(message).decode('utf-8')
         dtext = dtext[:dtext_len] + (dtext[dtext_len:] and '...')
         log.debug('Upstream >> {!r}'.format(dtext))
       try:
@@ -490,12 +490,12 @@ class VPNProxySocket(websocket.WebSocketHandler):
   def on_message(self, message):
     try:
       if debug:
-        dtext = obj2asc(message)
+        dtext = obj2asc(message).decode('utf-8')
         dtext = dtext[:dtext_len] + (dtext[dtext_len:] and '...')
         log.debug('WS client >> {!r}'.format(dtext))
       if not self.upstream_connect.done():
         yield self.upstream_connect # wait for connect
-      if isinstance(message, unicode):
+      if isinstance(message, str):
         message = message.encode('Latin-1') # universal encode
       yield self.upstream.write(message)
     except Exception as e:
@@ -568,11 +568,11 @@ class VPNWSClient(object):
         log.warning('Upstream disconnected')
         break
       if debug:
-        dtext = obj2asc(message)
+        dtext = obj2asc(message).decode('utf-8')
         dtext = dtext[:dtext_len] + (dtext[dtext_len:] and '...')
         log.debug('Upstream >> {!r}'.format(dtext))
       try:
-        if isinstance(message, unicode):
+        if isinstance(message, str):
           message = message.encode('Latin-1') # universal encode
         self.downstream.write(message)
       except Exception as e:
@@ -589,7 +589,7 @@ class VPNWSClient(object):
     log.info('Reading from client in a loop')
     while True:
       try:
-        message = yield self.downstream.read_bytes(65536, partial=True)
+        message = yield self.downstream.read_bytes(msgbuf_len, partial=True)
       except Exception as e:
         if not isinstance(e, iostream.StreamClosedError):
           errmsg = sub_error(sys._getframe().f_code.co_name)
@@ -597,7 +597,7 @@ class VPNWSClient(object):
         log.warning('Client disconnected')
         break
       if debug:
-        dtext = obj2asc(message)
+        dtext = obj2asc(message).decode('utf-8')
         dtext = dtext[:dtext_len] + (dtext[dtext_len:] and '...')
         log.debug('Client >> {!r}'.format(dtext))
       try:
@@ -631,8 +631,8 @@ class ClientSideTCPSocket(TCPServer):
 
   @gen.coroutine
   def handle_stream(self, stream, address):
-    handler = self.upstream_handler(stream)
-    self.loop.spawn_callback(handler.connect)
+    self.handler = self.upstream_handler(stream)
+    self.loop.spawn_callback(self.handler.connect)
 # ClientSideTCPSocket
 
 # =============================================================================
