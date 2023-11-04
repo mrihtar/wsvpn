@@ -115,7 +115,7 @@ def obj2asc(obj):
       else:
         res += '.'
   except:
-    res = obj
+    res = str(obj)
   return res
 # obj2asc
 
@@ -224,7 +224,7 @@ def run_cmd(args, timeout=0):
           if line is None:
             break
           if debug:
-            dtext = obj2asc(line).decode('utf-8')
+            dtext = obj2asc(line)
             dtext = dtext[:dtext_len] + (dtext[dtext_len:] and '...')
             log.debug('Cmd >> {!r}'.format(dtext))
           output += line
@@ -476,7 +476,7 @@ class VPNProxySocket(websocket.WebSocketHandler):
         self.cleanup()
         break
       if debug:
-        dtext = obj2asc(message).decode('utf-8')
+        dtext = obj2asc(message)
         dtext = dtext[:dtext_len] + (dtext[dtext_len:] and '...')
         log.debug('Upstream >> {!r}'.format(dtext))
       try:
@@ -493,7 +493,7 @@ class VPNProxySocket(websocket.WebSocketHandler):
   def on_message(self, message):
     try:
       if debug:
-        dtext = obj2asc(message).decode('utf-8')
+        dtext = obj2asc(message)
         dtext = dtext[:dtext_len] + (dtext[dtext_len:] and '...')
         log.debug('WS client >> {!r}'.format(dtext))
       if not self.upstream_connect.done():
@@ -571,7 +571,7 @@ class VPNWSClient(object):
         log.warning('Upstream disconnected')
         break
       if debug:
-        dtext = obj2asc(message).decode('utf-8')
+        dtext = obj2asc(message)
         dtext = dtext[:dtext_len] + (dtext[dtext_len:] and '...')
         log.debug('Upstream >> {!r}'.format(dtext))
       try:
@@ -600,7 +600,7 @@ class VPNWSClient(object):
         log.warning('Client disconnected')
         break
       if debug:
-        dtext = obj2asc(message).decode('utf-8')
+        dtext = obj2asc(message)
         dtext = dtext[:dtext_len] + (dtext[dtext_len:] and '...')
         log.debug('Client >> {!r}'.format(dtext))
       try:
