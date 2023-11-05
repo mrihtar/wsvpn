@@ -102,7 +102,10 @@ def obj2asc(obj):
   try:
     res = ''
     for c in obj:
-      v = ord(c)
+      try: # c is str
+        v = ord(c)
+      except: # c is int
+        v = c
       if v > 0xff:
         v1 = (v >> 8) & 0xFF
         if v1 >= 0x20 and v1 < 0x7F:
