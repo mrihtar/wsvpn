@@ -74,13 +74,22 @@ Stopping WSVPN...
 WSVPN stoped.
 ```
 ## Autostart WSVPN service
-...TBD...
+In a file `/etc/rc.local` put this command before the `exit 0` line:
+```
+/etc/init.d/wsvpn start
+```
 
 ## OpenVPN connection through WSVPN
-Create OpenVPN configuration on a Slate router (under `VPN` - `OpenVPN Client`). The OpenVPN client should connect to the `localhost` port `8000` via TCP, and there should be no `script` directive in the configuration, because Slate router takes care of *up* and *down* scripts y itself. So you configuration should include:
+Create OpenVPN configuration on a Slate router (under `VPN` - `OpenVPN Client`). The OpenVPN client should connect to the `localhost` port `8000` via TCP, and there should be no `script` directive in the configuration, because Slate router takes care of *up* and *down* scripts by itself. So you configuration should include:
 
 ```
 remote 127.0.0.1 8000
 proto tcp4
 ```
 Hint: try and test "normal" OpenVPN configuration first, and then change only `remote` directive to `127.0.0.1 8000`.
+
+Set autostart of OpenVPN from menu `VPN` - `VPN Dashboard`.
+
+![image](https://github.com/MatejKovacic/wsvpn/assets/3339198/7920215d-4ee1-4177-9ef5-8ce9f7983b4f)
+
+After reboot, *Slate* router will automatically connect to WSVPN.
