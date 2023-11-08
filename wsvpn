@@ -1,4 +1,4 @@
-!/bin/sh
+#!/bin/sh
 ### BEGIN INIT INFO
 # Provides: WSVPN
 # Required-Start: $network $local_fs
@@ -29,6 +29,7 @@ stop() {
     sleep 2
     ip route del 91.185.207.171
     echo "WSVPN stoped."
+    logger -t wsvpn "WSVPN stopped, route deleted"
 }
 
 case "$1" in 
@@ -41,6 +42,7 @@ case "$1" in
     restart)
        stop
        start
+       logger -t wsvpn "WSVPN restarted" 
        ;;
     status)
        pid=`ps | grep '[p]ython3 /root/wsvpn3.py' | awk '{ print $1 }'`
