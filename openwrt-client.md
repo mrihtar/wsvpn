@@ -93,3 +93,22 @@ Set autostart of OpenVPN from menu `VPN` - `VPN Dashboard`.
 ![image](https://github.com/MatejKovacic/wsvpn/assets/3339198/7920215d-4ee1-4177-9ef5-8ce9f7983b4f)
 
 After reboot, *Slate* router will automatically connect to WSVPN.
+
+## Tests
+Check if you are connected to VPN by visiting [api.ipify.org](https://api.ipify.org)
+
+Speed tests:
+
+| What             | WSVPN   | without VPN | Wireguard | direct upstream |
+|------------------|---------|-------------|-----------|-----------------|
+| Download         | 5.64 Mb | 5.88 Mb     | 5.67 Mb   | 4.61 Mb         |
+| Upload           | 5.57 Mb | 5.93 Mb     | 5.61 Mb   | 5.48 Mb         |
+| idle latency     | 205 ms  | 64 ms       | 72 ms     | 61 ms           |
+| download latency | 731 ms  | 228 ms      | 232 ms    | 167 ms          |
+| upload latency   | 706 ms  | 232 ms      | 225 ms    | 231 ms          |
+
+We tested:
+- WSVPN connection on router in WiFi repeater mode
+- no VPN connection on router in WiFi repeater mode
+- Wireguard connection on router in WiFi repeater mode
+- direct client connection to upstream WiFi (not connected to the *Slate* router)
