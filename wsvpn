@@ -17,8 +17,16 @@
 start() {
     sleep 5   # make sure boot process is done, no more console msgs
     echo "Starting WSVPN..."
-    ( /usr/bin/python3 /root/wsvpn3.py -m client -l 127.0.0.1:8000 -u wss://telefoncek.si:443/ws/vpn/ -r ) 2>&1 | logger -t $(echo $(basename $0)) &
-    echo "WSVPN started"
+    pid=`ps | grep '[p]ython3 /root/wsvpn3.py' | awk '{ print $1 }'`
+    if [ -z "$pid" ] 
+    then
+        ( /usr/bin/python3 /root/wsvpn3.py -m client -l 127.0.0.1:8000 -u wss://telefoncek.si:443/ws/vpn/ -r ) 2>&1 | logger -t $(echo $(basename $0)) &
+        echo "WSVPN started" 
+    else
+        echo "WSVPN is already running, process ID is $pid"
+    fi
+#    ( /usr/bin/python3 /root/wsvpn3.py -m client -l 127.0.0.1:8000 -u wss://telefoncek.si:443/ws/vpn/ -r ) 2>&1 | logger -t $(echo $(basename $0)) &
+#    echo "WSVPN started"
 }
 
 stop() {
