@@ -150,7 +150,7 @@ def signal_handler(signum, frame):
 def try_exit():
   if closing:
     if close_callback is not None:
-      server.stop()
+      #server.stop()
       close_callback.stop()
     loop = ioloop.IOLoop.current()
     #loop.stop()
@@ -885,13 +885,13 @@ def main(argv):
         return 1
 
     # periodically check for signals and in case of signal try to terminate main loop
-    #signal.signal(signal.SIGINT, signal_handler)
-    #signal.signal(signal.SIGTERM, signal_handler)
+    signal.signal(signal.SIGINT, signal_handler)
+    signal.signal(signal.SIGTERM, signal_handler)
     #log.debug('Using proactor: IocpProactor') # on Windows
-    #close_callback = ioloop.PeriodicCallback(try_exit, 500, 0.1)
-    #close_callback.start()
+    close_callback = ioloop.PeriodicCallback(try_exit, 500, 0.1)
+    close_callback.start()
 
-    AsyncIOMainLoop().install()
+    #AsyncIOMainLoop().install()
     loop = asyncio.get_event_loop()
 
     if mode == 'server':
@@ -963,4 +963,3 @@ if __name__ == '__main__':
     sys.exit(rc)
   except SystemExit as e:
     os._exit(10)
-
