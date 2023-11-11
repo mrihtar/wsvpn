@@ -9,9 +9,11 @@
 # Description: Running WSVPN obfuscation service
 ### END INIT INFO
 
-START=99
+# Source function library.
+#. /etc/init.d/functions
+ START=99
 
-## Service start/stop functions ## 
+##Service start/stop functions## 
 start() {
     sleep 5   # make sure boot process is done, no more console msgs
     echo "Starting WSVPN..."
@@ -23,6 +25,8 @@ start() {
     else
         echo "WSVPN is already running, process ID is $pid"
     fi
+#    ( /usr/bin/python3 /root/wsvpn3.py -m client -l 127.0.0.1:8000 -u wss://telefoncek.si:443/ws/vpn/ -r ) 2>&1 | logger -t $(echo $(basename $0)) &
+#    echo "WSVPN started"
 }
 
 stop() {
@@ -51,7 +55,7 @@ case "$1" in
     status)
        pid=`ps | grep '[p]ython3 /root/wsvpn3.py' | awk '{ print $1 }'`
        echo "======================================"
-       [ -z "$pid" ] && echo "WSVPN is not running!" || echo "WSVPN running, process ID is $pid"
+       [ -z "$pid" ] && echo "WSVPN is not running!" || echo "WSVPN runnig, process ID is $pid"
        echo "======================================"
        echo "WSVPN output in system log:"
        logread -e wsvpn
