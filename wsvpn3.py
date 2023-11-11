@@ -524,9 +524,6 @@ class VPNProxySocket(websocket.WebSocketHandler):
     try:
       self.close()
     except: pass
-
-  def stop(self):
-    pass
 # VPNProxySocket
 
 # =============================================================================
@@ -628,9 +625,6 @@ class VPNWSClient(object):
     try:
       self.socket.close()
     except: pass
-
-  def stop(self):
-    pass
 # VPNWSClient
 
 # =============================================================================
